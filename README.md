@@ -1,8 +1,14 @@
 # Stålvingar
 
-A horizontal propeller-plane shoot 'em up: four stages (dawn, storm, sunset, night), two kinds of boss
-(flying fortress and battleship), then the loop repeats harder. One HTML5 canvas file (`game/index.html`)
+A horizontal propeller-plane shoot 'em up: seven stages (dawn, storm, sunset, night, arctic, volcano, iron tempest)
+with five kinds of boss (flying fortress, battleship, aircraft carrier, flying-boat gunship, missile submarine),
+then the loop repeats harder. One HTML5 canvas file (`game/index.html`)
 with all graphics and sound generated in code.
+
+## Planes
+Chosen after the title screen (remembered):
+- **FALK**: fast interceptor. Light rapid guns, narrow spread, a RAIL shot that pierces, small quick bombs.
+- **BJÖRN**: slow heavy fighter. Heavy shells (about 30 % more damage), wide spread, a big piercing CANNON, heavy bombs with a wide blast.
 
 ## Power bar
 Red planes, and a whole red squadron shot down, drop orange pods. Each pod moves the highlight one box
@@ -14,11 +20,11 @@ along the bar at the bottom; POWER takes the lit upgrade:
 | TWIN | 3 | spread shot, then faster fire |
 | BOMB | 2 | bombs that fall onto ships and planes below |
 | REAR | 2 | tail gunner (back, then back + diagonals) |
-| CANNON | 3 | piercing cannon shells, faster per level |
+| CANNON / RAIL | 3 | piercing shots, faster per level |
 | WINGS | 2 | wingmen that follow your path and fire with you |
 | SHIELD | 3 hits | absorbs hits; taking it again refills it |
 
-Rare blue pods destroy everything on screen. Losing a ship loses all upgrades. Gold medals give points.
+Rare blue pods destroy everything on screen. Gunfire can shoot down the submarine's missiles. Losing a ship loses all upgrades. Gold medals give points.
 
 ## Controls
 Keyboard: arrows/WASD, Z fire, X power, P pause, M sound, F11 fullscreen (Linux).
