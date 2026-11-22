@@ -1,0 +1,22 @@
+#!/bin/sh
+# Install Stålvingar for the current user: ~/.local/share/stalvingar + a menu entry.
+# Run from the unpacked Linux package (or from the repo after ./build-linux.sh).
+set -e
+cd "$(dirname "$0")"
+DEST=${XDG_DATA_HOME:-$HOME/.local/share}
+mkdir -p "$DEST/stalvingar-game" "$DEST/applications" "$DEST/icons/hicolor/256x256/apps"
+cp index.html stalvingar.py stalvingar.png "$DEST/stalvingar-game/"
+chmod +x "$DEST/stalvingar-game/stalvingar.py"
+cp stalvingar.png "$DEST/icons/hicolor/256x256/apps/stalvingar.png"
+cat > "$DEST/applications/stalvingar.desktop" <<DESK
+[Desktop Entry]
+Type=Application
+Name=Stålvingar
+Comment=Propeller-plane shoot 'em up
+Exec=python3 "$DEST/stalvingar-game/stalvingar.py"
+Icon=stalvingar
+Terminal=false
+Categories=Game;ArcadeGame;
+DESK
+update-desktop-database "$DEST/applications" 2>/dev/null || true
+echo "Installed. Start \"Stålvingar\" from the menu, or: python3 $DEST/stalvingar-game/stalvingar.py"
