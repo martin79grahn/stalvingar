@@ -1,6 +1,7 @@
 package se.martin79grahn.stalvingar;
 
 import android.app.Activity;
+import android.content.Intent;
 import android.graphics.Color;
 import android.os.Build;
 import android.os.Bundle;
@@ -15,6 +16,7 @@ import android.webkit.WebViewClient;
 /** The game (assets/index.html) fullscreen in a WebView. */
 public class MainActivity extends Activity {
     private WebView web;
+    private Updater updater;
 
     @Override
     protected void onCreate(Bundle state) {
@@ -35,6 +37,14 @@ public class MainActivity extends Activity {
         setContentView(web);
         hideBars();
         web.loadUrl("file:///android_asset/index.html");
+        updater = new Updater(this);
+        if (state == null) updater.check();
+    }
+
+    @Override
+    protected void onNewIntent(Intent intent) {
+        super.onNewIntent(intent);
+        if (Updater.ACTION_INSTALL.equals(intent.getAction())) updater.onInstallStatus(intent);
     }
 
     @SuppressWarnings("deprecation")

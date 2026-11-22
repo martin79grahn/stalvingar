@@ -26,7 +26,7 @@ Gamepad: stick/d-pad, A fire, B power, Start pause.
 Touch: drag anywhere to fly (fires automatically), tap POWER or the bar.
 
 ## Builds
-- `./build-linux.sh` → `dist/Stalvingar-linux-vX.tar.gz` (the page + a WebKitGTK launcher, `install.sh` adds a menu entry)
+- `./build-linux.sh` → `dist/Stalvingar-linux-vX.tar.gz` (the page + a WebKitGTK launcher, `stalvingar.sh` starts it, `install` adds a menu entry; both check the Release Store for updates)
 - `VERSION=x CODE=n ./build-apk.sh` → `out/Stalvingar-vX.apk` (fullscreen landscape WebView), signed with
   `~/.android/stalvingar-release.keystore` (alias stalvingar, password in `~/.android/stalvingar-release.pass`)
 - or just open `game/index.html` in a browser.
