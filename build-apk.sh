@@ -18,15 +18,16 @@ if [ -z "$JAVAC" ] && ! command -v javac >/dev/null; then
 fi
 JAVAC=${JAVAC:-javac}
 JFLAGS=${JFLAGS:---release 11}
-# update check against the Release Store (~/gh-appstore); the repo is private, so it needs the store key
+# update check against the Release Store (~/gh-appstore). The repo is public, so no store key is needed; never bake
+# the key into a public release (anyone could download it). STORE_KEY can still be given explicitly for private builds.
 STORE_URL=${STORE_URL:-http://192.168.0.97:8787 http://100.85.197.108:8787}
-STORE_KEY=${STORE_KEY:-$(python3 -c 'import json,os;print(json.load(open(os.path.expanduser("~/.local/share/gh-appstore/config.json")))["access_key"])' 2>/dev/null || true)}
+STORE_KEY=${STORE_KEY:-}
 UPDATE_JSON=$(printf '{"store": "%s", "repo": "martin79grahn/stalvingar", "key": "%s"}' "$STORE_URL" "$STORE_KEY")
 
 B=out/android
 rm -rf $B && mkdir -p $B/assets $B/classes $B/res
 cp game/index.html $B/assets/
-[ -n "$STORE_KEY" ] && echo "$UPDATE_JSON" > $B/assets/update.json
+echo "$UPDATE_JSON" > $B/assets/update.json
 python3 icon.py --android $B/res
 $BT/aapt2 compile --dir android/res -o $B/res-values.zip
 $BT/aapt2 compile --dir $B/res -o $B/res-icon.zip
