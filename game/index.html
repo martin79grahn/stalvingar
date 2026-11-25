@@ -1148,7 +1148,10 @@ function updPlayer() {
     if (G.mode !== "play") return;
     if (--p.dead <= 0) {
       if (G.lives <= 0) { toOver(); return; }
-      G.lives--; G.p = newPlayer();
+      G.lives--;
+      const lv = p.lv;   // dying costs one step of every upgrade, not all of them
+      G.p = newPlayer();
+      for (const k in lv) G.p.lv[k] = Math.max(0, lv[k] - 1);
     }
     return;
   }
