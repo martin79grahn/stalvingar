@@ -9,10 +9,22 @@ with all graphics and sound generated in code.
 Chosen after the title screen (remembered):
 - **FALK**: fast interceptor. Light rapid guns, narrow spread, a RAIL shot that pierces, small quick bombs.
 - **BJÖRN**: slow heavy fighter. Heavy shells (about 30 % more damage), wide spread, a big piercing CANNON, heavy bombs with a wide blast.
+- **ÖRN** (locked until stage 3 has been cleared): balanced ace fighter, RAIL shot, **one extra level on every power-up**.
+- **DRAKE** (locked until all seven stages have been cleared): fast and heavy, big CANNON, **two extra levels on every power-up**.
+
+Progress (stages cleared, on any difficulty) is remembered on the device.
+
+## Difficulty
+EASY, NORMAL or HARD, chosen on the plane screen (up/down, or tap). EASY gives 4 lives, slower enemy fire and
+weaker enemies and bosses; HARD has faster, denser enemy fire and tougher enemies and bosses.
 
 ## Power bar
-Red planes, and a whole red squadron shot down, drop orange pods. Each pod moves the highlight one box
+Red planes and a whole red squadron shot down drop an orange pod; boats, destroyers and the big planes
+(heavy fighters and bombers) always drop two orange pods. Each pod moves the highlight one box
 along the bar at the bottom; POWER takes the lit upgrade:
+
+Levels are for FALK and BJÖRN; ÖRN gets one more in every box and DRAKE two more (more spread, faster fire,
+more bombs, more tail guns, double side cannon shots, up to four wingmen, a bigger shield).
 
 | Box | Levels | Effect |
 |---|---|---|
@@ -24,7 +36,7 @@ along the bar at the bottom; POWER takes the lit upgrade:
 | WINGS | 2 | wingmen that follow your path and fire with you |
 | SHIELD | 3 hits | absorbs hits; taking it again refills it |
 
-Rare blue pods destroy everything on screen. Gunfire can shoot down the submarine's missiles. Losing a ship loses all upgrades. Gold medals give points.
+Rare blue pods destroy everything on screen. Gunfire can shoot down the submarine's missiles. Losing a plane costs one level of every upgrade. Gold medals give points.
 
 ## Controls
 Keyboard: arrows/WASD, Z fire, X power, P pause, M sound, F11 fullscreen (Linux).
