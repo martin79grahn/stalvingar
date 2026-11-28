@@ -607,6 +607,21 @@ setInterval(() => {
 const keys = {};
 let touchMode = false, tdx = 0, tdy = 0, tFire = false, tPowerHit = false, tPauseHit = false, tTap = null;
 const touches = new Map();
+// touch steering: "stick" = floating virtual joystick where the thumb lands, "drag" = the plane follows the finger
+let ctrl = store.get("ctrl", "stick");
+const STICK_R = 20, STICK_DEAD = 0.12;
+const stick = { id: null, bx: 0, by: 0, kx: 0, ky: 0, x: 0, y: 0 };
+function stickMove(px, py) {
+  let dx = px - stick.bx, dy = py - stick.by, d = Math.hypot(dx, dy);
+  if (d > STICK_R) { // the base follows a thumb that slides past the edge
+    stick.bx += dx * (1 - STICK_R / d); stick.by += dy * (1 - STICK_R / d);
+    dx = px - stick.bx; dy = py - stick.by; d = STICK_R;
+  }
+  stick.kx = dx; stick.ky = dy;
+  const m = d / STICK_R, k = m < STICK_DEAD ? 0 : (m - STICK_DEAD) / (1 - STICK_DEAD) / Math.max(m, 1e-6);
+  stick.x = dx / STICK_R * k; stick.y = dy / STICK_R * k;
+}
+function toggleCtrl() { ctrl = ctrl === "stick" ? "drag" : "stick"; store.set("ctrl", ctrl); stick.id = null; stick.x = stick.y = 0; }
 const inp = { x: 0, y: 0, fire: false, fireHit: false, powerHit: false, pauseHit: false, anyHit: false };
 let lastBtn = { fire: false, power: false, pause: false, start: false };
 const K_FIRE = ["KeyZ", "KeyJ", "Space"], K_POW = ["KeyX", "KeyK", "KeyC", "ShiftLeft", "ShiftRight"];
@@ -648,6 +663,13 @@ document.addEventListener("touchstart", e => {
     if (G.mode !== "play" || G.paused) { role = "tap"; tTap = p; }
     else if (p.x > W - 24 && p.y < TOP + 14) { role = "pause"; tPauseHit = true; }
     else if (p.y >= PF_BOT - 2 || Math.hypot(p.x - pb.x, p.y - pb.y) < pb.r + 5) { role = "power"; tPowerHit = true; }
+    if (role === "move" && ctrl === "stick") {
+      if (stick.id === null) {
+        stick.id = t.identifier;
+        stick.bx = clamp(p.x, STICK_R + 2, W - STICK_R - 2); stick.by = clamp(p.y, TOP + STICK_R + 2, PF_BOT - STICK_R - 2);
+        stickMove(p.x, p.y);
+      }
+    }
     touches.set(t.identifier, { role, x: p.x, y: p.y });
   }
   refreshTouchFire();
@@ -658,10 +680,17 @@ document.addEventListener("touchmove", e => {
     const o = touches.get(t.identifier);
     if (!o || o.role !== "move") continue;
     const p = tpos(t);
+    if (ctrl === "stick") { if (t.identifier === stick.id) stickMove(p.x, p.y); continue; }
     tdx += (p.x - o.x) * 1.5; tdy += (p.y - o.y) * 1.5; o.x = p.x; o.y = p.y;
   }
 }, { passive: false });
-const touchEnd = e => { for (const t of e.changedTouches) touches.delete(t.identifier); refreshTouchFire(); };
+const touchEnd = e => {
+  for (const t of e.changedTouches) {
+    touches.delete(t.identifier);
+    if (t.identifier === stick.id) { stick.id = null; stick.x = stick.y = 0; }
+  }
+  refreshTouchFire();
+};
 document.addEventListener("touchend", touchEnd);
 document.addEventListener("touchcancel", touchEnd);
 document.addEventListener("mousedown", e => { audioInit(); if (G.mode === "title" || G.mode === "select") tTap = tpos(e); });
@@ -687,6 +716,7 @@ function poll() {
     if (b(8)) start = true;
   }
   if (tFire) fire = true;
+  if (stick.id !== null && G.mode === "play" && !G.paused) { x += stick.x; y += stick.y; }
   inp.x = clamp(x, -1, 1); inp.y = clamp(y, -1, 1);
   inp.fire = fire;
   inp.fireHit = fire && !lastBtn.fire;
@@ -1196,7 +1226,8 @@ function updPlayer() {
   else {
     const sp = PL().spd + p.lv.speed * PL().spdUp;
     let dx = inp.x, dy = inp.y;
-    if (dx && dy) { dx *= 0.7071; dy *= 0.7071; }
+    const mag = Math.hypot(dx, dy);
+    if (mag > 1) { dx /= mag; dy /= mag; }
     p.x += dx * sp + tdx; p.y += dy * sp + tdy;
     p.x = clamp(p.x, 10, W - 16); p.y = clamp(p.y, TOP + 6, PF_BOT - 7);
   }
@@ -1444,7 +1475,8 @@ function update() {
   if (G.paused) {
     if (inp.tap) {
       if (inp.tap.y > H / 2 + 14 && inp.tap.y < H / 2 + 26) toggleSound();
-      else if (inp.tap.y >= H / 2 + 26 && inp.tap.y < H / 2 + 40) quitToTitle();
+      else if (inp.tap.y >= H / 2 + 26 && inp.tap.y < H / 2 + 40) toggleCtrl();
+      else if (inp.tap.y >= H / 2 + 40 && inp.tap.y < H / 2 + 54) quitToTitle();
       else G.paused = false;
     } else if (inp.fireHit) G.paused = false;
     return;
@@ -1650,6 +1682,15 @@ function drawEnemyBullets() {
 }
 
 function slotMaxed(p, s) { return p.lv[s.k] >= smax(s); }
+function drawStick() {
+  const on = stick.id !== null, bx = on ? stick.bx : STICK_R + 14, by = on ? stick.by : PF_BOT - STICK_R - 12;
+  ctx.globalAlpha = on ? 0.35 : 0.14;
+  ctx.fillStyle = "#0a0d14"; fcirc(bx, by, STICK_R);
+  ctx.strokeStyle = "#dfe6f5"; ctx.lineWidth = 1; ctx.beginPath(); ctx.arc(bx + 0.5, by + 0.5, STICK_R, 0, TAU); ctx.stroke();
+  ctx.globalAlpha = on ? 0.75 : 0.25;
+  ctx.fillStyle = "#dfe6f5"; fcirc(bx + (on ? stick.kx : 0), by + (on ? stick.ky : 0), 8);
+  ctx.globalAlpha = 1;
+}
 function drawHUD() {
   ctx.fillStyle = "#0a0d14"; ctx.fillRect(0, 0, W, TOP); ctx.fillRect(0, PF_BOT, W, BAR_H);
   ctx.fillStyle = "#26304a"; ctx.fillRect(0, TOP - 1, W, 1); ctx.fillRect(0, PF_BOT, W, 1);
@@ -1673,6 +1714,7 @@ function drawHUD() {
     ctx.globalAlpha = 0.5; ctx.fillStyle = p.sel >= 0 ? "#ff9a2a" : "#2a3350"; fcirc(b.x, b.y, b.r); ctx.globalAlpha = 1;
     ctx.strokeStyle = "rgba(255,255,255,0.6)"; ctx.lineWidth = 1; ctx.beginPath(); ctx.arc(b.x + 0.5, b.y + 0.5, b.r, 0, TAU); ctx.stroke();
     txt(p.sel >= 0 ? slotName(SLOTS[p.sel]) : "POWER", b.x, b.y - 3, "#ffffff", 1);
+    if (ctrl === "stick") drawStick();
   }
   const b = G.boss;
   if (b && !b.dying && b.x < W + 20) {
@@ -1707,8 +1749,9 @@ function drawCentre() {
     ctx.fillStyle = "rgba(5,8,15,0.6)"; ctx.fillRect(0, 0, W, H);
     txt("PAUSED", cx, H / 2 - 22, "#ffffff", 1, 2);
     txt("SOUND: " + (soundOn ? "ON" : "OFF") + (touchMode ? "" : "  (M)"), cx, H / 2 + 16, "#dfe6f5", 1);
-    txt(touchMode ? "QUIT TO TITLE" : "Q QUIT TO TITLE", cx, H / 2 + 30, "#dfe6f5", 1);
-    txt(touchMode ? "TAP TO RESUME" : "P OR FIRE TO RESUME", cx, H / 2 + 50, "#ffd24a", 1);
+    if (touchMode) txt("CONTROLS: " + (ctrl === "stick" ? "STICK" : "DRAG"), cx, H / 2 + 30, "#dfe6f5", 1);
+    txt(touchMode ? "QUIT TO TITLE" : "Q QUIT TO TITLE", cx, H / 2 + (touchMode ? 44 : 30), "#dfe6f5", 1);
+    txt(touchMode ? "TAP TO RESUME" : "P OR FIRE TO RESUME", cx, H / 2 + (touchMode ? 64 : 50), "#ffd24a", 1);
   }
 }
 
@@ -1722,7 +1765,7 @@ function drawTitle() {
   txt("HI SCORE " + String(G.hi).padStart(7, "0"), cx, 74, "#7fe6ff", 1);
   if (G.t % 50 < 34) txt(touchMode ? "TAP TO START" : "PRESS FIRE TO START", cx, 92, "#ffffff", 1, 2);
   const lines = touchMode
-    ? ["DRAG ANYWHERE TO FLY - YOU FIRE AUTOMATICALLY", "TAP POWER (OR THE BAR) TO TAKE THE LIT UPGRADE"]
+    ? [ctrl === "stick" ? "PUT A THUMB DOWN FOR THE STICK - YOU FIRE AUTOMATICALLY" : "DRAG ANYWHERE TO FLY - YOU FIRE AUTOMATICALLY", "TAP POWER (OR THE BAR) TO TAKE THE LIT UPGRADE"]
     : ["ARROWS/WASD MOVE   Z FIRE   X POWER   P PAUSE   M SOUND", "GAMEPAD: A FIRE   B POWER   START PAUSE"];
   ctx.fillStyle = "rgba(5,8,15,0.55)"; ctx.fillRect(0, PF_BOT - 44, W, 44);
   txt("RED PLANES, BOATS AND BIG PLANES DROP POWER PODS", cx, PF_BOT - 40, "#ffb07a", 1);
